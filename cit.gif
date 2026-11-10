@@ -1,0 +1,146 @@
+from PIL import Image, ImageDraw
+import math
+
+WIDTH, HEIGHT = 400, 400
+frames = []
+
+for frame in range(48):
+    image = Image.new("RGB", (WIDTH, HEIGHT), "#fff0df")
+    draw = ImageDraw.Draw(image)
+
+    phase = frame * 2 * math.pi / 48
+    bounce = int(8 * math.sin(phase))
+    tail_swing = int(24 * math.sin(phase))
+
+    fur = "#f3a544"
+    outline = "#633e29"
+
+    # Тінь під котиком
+    draw.ellipse((115, 332, 285, 352), fill="#e8d5c0")
+
+    # Хвіст: плавна крива з округленим кінчиком
+    points = []
+    for step in range(31):
+        t = step / 30
+        x = 255 + 70 * t + tail_swing * t * t
+        y = 290 - 90 * math.sin(t * math.pi / 2) + bounce
+        points.append((int(x), int(y)))
+
+    draw.line(points, fill=outline, width=27)
+    draw.line(points, fill=fur, width=21)
+    x, y = points[-1]
+    draw.ellipse((x - 10, y - 10, x + 10, y + 10), fill=fur)
+
+    # Тіло
+    draw.ellipse(
+        (130, 205 + bounce, 270, 340 + bounce),
+        fill=fur, outline=outline, width=4
+    )
+    draw.ellipse(
+        (164, 245 + bounce, 236, 325 + bounce),
+        fill="#ffe0aa"
+    )
+
+    # Вушка
+    draw.polygon(
+        [(121, 158 + bounce), (125, 83 + bounce), (177, 125 + bounce)],
+        fill=fur, outline=outline, width=4
+    )
+    draw.polygon(
+        [(223, 125 + bounce), (275, 83 + bounce), (279, 158 + bounce)],
+        fill=fur, outline=outline, width=4
+    )
+    draw.polygon(
+        [(133, 132 + bounce), (135, 103 + bounce), (158, 125 + bounce)],
+        fill="#ef9694"
+    )
+    draw.polygon(
+        [(242, 125 + bounce), (265, 103 + bounce), (267, 132 + bounce)],
+        fill="#ef9694"
+    )
+
+    # Голова
+    draw.ellipse(
+        (112, 113 + bounce, 288, 258 + bounce),
+        fill=fur, outline=outline, width=4
+    )
+
+    # Смужки на лобі
+    for x, offset in [(182, -4), (200, 0), (218, 4)]:
+        draw.line(
+            [(x, 122 + bounce), (x + offset, 146 + bounce)],
+            fill="#c77a30", width=5
+        )
+
+    # Очі: періодичне моргання
+    blinking = frame in (20, 21, 22, 23)
+    for x in (163, 237):
+        if blinking:
+            draw.arc(
+                (x - 12, 174 + bounce, x + 12, 188 + bounce),
+                0, 180, fill=outline, width=4
+            )
+        else:
+            draw.ellipse(
+                (x - 8, 169 + bounce, x + 8, 192 + bounce),
+                fill=outline
+            )
+            draw.ellipse(
+                (x - 4, 172 + bounce, x, 178 + bounce),
+                fill="white"
+            )
+
+    # Щічки
+    for x in (145, 255):
+        draw.ellipse(
+            (x - 13, 199 + bounce, x + 13, 211 + bounce),
+            fill="#f29282"
+        )
+
+    # Носик і рот
+    draw.polygon(
+        [(192, 199 + bounce), (208, 199 + bounce), (200, 208 + bounce)],
+        fill="#a65e61"
+    )
+    draw.line(
+        [(200, 207 + bounce), (200, 216 + bounce)],
+        fill=outline, width=3
+    )
+    draw.arc(
+        (181, 207 + bounce, 201, 225 + bounce),
+        0, 90, fill=outline, width=3
+    )
+    draw.arc(
+        (199, 207 + bounce, 219, 225 + bounce),
+        90, 180, fill=outline, width=3
+    )
+
+    # Вуса
+    for side in (-1, 1):
+        for offset in (-9, 0, 9):
+            draw.line(
+                [
+                    (200 + side * 55, 211 + bounce + offset // 2),
+                    (200 + side * 94, 211 + bounce + offset)
+                ],
+                fill=outline, width=2
+            )
+
+    # Лапки
+    for x in (153, 219):
+        draw.ellipse(
+            (x - 18, 314 + bounce, x + 32, 344 + bounce),
+            fill=fur, outline=outline, width=3
+        )
+
+    frames.append(image)
+
+frames[0].save(
+    "cat.gif",
+    save_all=True,
+    append_images=frames[1:],
+    duration=60,
+    loop=0
+)
+
+print("Готово! Анімацію збережено у файл cat.gif")
